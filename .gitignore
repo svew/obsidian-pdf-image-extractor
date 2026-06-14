@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Build output
+main.js
+*.js.map
+
+# IDE / OS
+.DS_Store
+
+# npm
+package-lock.json
+
+# testing
+PDF Extract Test Vault
+*.pdf

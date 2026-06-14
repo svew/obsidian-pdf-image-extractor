@@ -1,0 +1,9 @@
+{
+	"id": "pdf-image-extractor",
+	"name": "PDF Image Extractor",
+	"version": "1.0.0",
+	"minAppVersion": "1.4.0",
+	"description": "Adds a command to extract embedded images from the currently open PDF and save them to your vault's attachments folder.",
+	"author": "PDF Image Extractor",
+	"isDesktopOnly": true
+}

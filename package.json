@@ -1,28 +1,28 @@
 {
-	"name": "obsidian-pdf-image-extractor",
-	"version": "1.0.0",
-	"description": "Obsidian plugin that extracts embedded images from the open PDF and saves them to the attachments folder.",
-	"main": "main.js",
-	"scripts": {
-		"dev": "node esbuild.config.mjs",
-		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
-	},
-	"keywords": [
-		"obsidian",
-		"plugin",
-		"pdf",
-		"images"
-	],
-	"author": "",
-	"license": "MIT",
-	"devDependencies": {
-		"@types/node": "^20.11.0",
-		"builtin-modules": "^3.3.0",
-		"esbuild": "0.20.2",
-		"obsidian": "latest",
-		"typescript": "^5.4.0"
-	},
-	"dependencies": {
-		"pdfjs-dist": "3.11.174"
-	}
+    "name": "obsidian-pdf-image-extractor",
+    "version": "1.0.0",
+    "description": "Obsidian plugin that extracts embedded images from the open PDF and saves them to the attachments folder.",
+    "main": "main.js",
+    "scripts": {
+        "dev": "node esbuild.config.mjs",
+        "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+    },
+    "keywords": [
+        "obsidian",
+        "plugin",
+        "pdf",
+        "images"
+    ],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/node": "^20.11.0",
+        "builtin-modules": "^3.3.0",
+        "esbuild": "0.20.2",
+        "obsidian": "latest",
+        "typescript": "^5.4.0"
+    },
+    "dependencies": {
+        "pdfjs-dist": "3.11.174"
+    }
 }

@@ -14,51 +14,58 @@ const prod = process.argv[2] === "production";
 // esbuild plugin that loads the PDF.js worker source as a text string so it can
 // be turned into a Blob URL at runtime. This avoids shipping a separate worker
 // file alongside the plugin.
-const pdfWorkerAsText = {
-	name: "pdf-worker-as-text",
-	setup(build) {
-		build.onLoad({ filter: /pdf\.worker(\.min)?\.js$/ }, async (args) => {
-			const contents = await fs.promises.readFile(args.path, "utf8");
-			return { contents, loader: "text" };
-		});
-	},
+const vaultPluginDir = "PDF Extract Test Vault/.obsidian/plugins/pdf-image-extractor";
+
+// After each build, copy the output into the test vault's plugin folder so Obsidian always
+// loads the latest code on reload.
+const copyToVault = {
+    name: "copy-to-vault",
+    setup(build) {
+        build.onEnd(async () => {
+            const outfile = build.initialOptions.outfile;
+            if (!outfile) return;
+            const dest = `${vaultPluginDir}/${outfile}`;
+            await fs.promises.copyFile(outfile, dest).catch(() => {});
+            console.log(`Copied ${outfile} --> ${dest}`);
+        });
+    },
 };
 
 const context = await esbuild.context({
-	banner: {
-		js: banner,
-	},
-	entryPoints: ["main.ts"],
-	bundle: true,
-	external: [
-		"obsidian",
-		"electron",
-		"@codemirror/autocomplete",
-		"@codemirror/collab",
-		"@codemirror/commands",
-		"@codemirror/language",
-		"@codemirror/lint",
-		"@codemirror/search",
-		"@codemirror/state",
-		"@codemirror/view",
-		"@lezer/common",
-		"@lezer/highlight",
-		"@lezer/lr",
-		...builtins,
-	],
-	format: "cjs",
-	target: "es2018",
-	logLevel: "info",
-	sourcemap: prod ? false : "inline",
-	treeShaking: true,
-	outfile: "main.js",
-	minify: prod,
-	plugins: [pdfWorkerAsText],
+    banner: {
+        js: banner,
+    },
+    entryPoints: ["main.ts"],
+    bundle: true,
+    external: [
+        "obsidian",
+        "electron",
+        "@codemirror/autocomplete",
+        "@codemirror/collab",
+        "@codemirror/commands",
+        "@codemirror/language",
+        "@codemirror/lint",
+        "@codemirror/search",
+        "@codemirror/state",
+        "@codemirror/view",
+        "@lezer/common",
+        "@lezer/highlight",
+        "@lezer/lr",
+        ...builtins,
+    ],
+    format: "cjs",
+    target: "es2018",
+    logLevel: "info",
+    sourcemap: prod ? false : "inline",
+    treeShaking: true,
+    outfile: "main.js",
+    minify: prod,
+    plugins: [copyToVault],
 });
 
 if (prod) {
-	await context.rebuild();
-	process.exit(0);
+    await context.rebuild();
+    process.exit(0);
 } else {
-	await context.watch();
+    await context.watch();
 }

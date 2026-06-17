@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import type PdfImageExtractorPlugin from "./main";
-import { DEFAULT_SETTINGS, OutputFolderMode, OutputFormat, PdfImageExtractorSettings } from "settings";
+import type PdfImageExtractorPlugin from "main";
+import { DEFAULT_SETTINGS, OutputFolderMode, OutputFormat } from "./settings";
 
 
 export class PdfImageExtractorSettingTab extends PluginSettingTab {

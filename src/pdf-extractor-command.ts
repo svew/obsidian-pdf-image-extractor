@@ -3,7 +3,7 @@ import { Command, normalizePath, Notice, TFile, Vault } from "obsidian";
 import * as pdfjs from "pdfjs-dist";
 import pdfWorkerSource from "pdfjs-dist/build/pdf.worker.min.js";
 import { PdfExtractor } from "./pdf-extractor";
-import { OutputFolderMode, OutputFormat } from "settings";
+import { OutputFolderMode, OutputFormat } from "./settings";
 
 export class PdfImageExtractorCommand implements Command
 {

@@ -1,7 +1,7 @@
 import { Plugin } from "obsidian";
-import { PdfImageExtractorSettingTab } from "./settings-tab";
-import { DEFAULT_SETTINGS, PdfImageExtractorSettings } from "settings";
-import { PdfImageExtractorCommand } from "pdf-extractor-command";
+import { PdfImageExtractorSettingTab } from "./src/settings-tab";
+import { DEFAULT_SETTINGS, PdfImageExtractorSettings } from "./src/settings";
+import { PdfImageExtractorCommand } from "./src/pdf-extractor-command";
 
 
 export default class PdfImageExtractorPlugin extends Plugin {

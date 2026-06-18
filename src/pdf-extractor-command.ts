@@ -8,12 +8,20 @@ import { OutputFolderMode, OutputFormat } from "./settings";
 export class PdfImageExtractorCommand implements Command
 {
     private workerInitialized = false;
+    private workerUrl?: string;
 
     public readonly id = "extract-images-from-pdf";
     public readonly name = "Extract images from PDF";
     public readonly icon = "image-down";
 
     constructor(public readonly plugin: PdfImageExtractorPlugin) { }
+
+    unload(): void {
+        if (this.workerUrl) {
+            URL.revokeObjectURL(this.workerUrl);
+            this.workerUrl = undefined;
+        }
+    }
     
     async callback(): Promise<void> {
         const activeFile = this.plugin.app.workspace.getActiveFile();
@@ -41,6 +49,7 @@ export class PdfImageExtractorCommand implements Command
                 this.plugin.getSetting("outputFormat"),
                 activeFile.parent ? activeFile.parent.path : "",
             );
+            await fileWriter.ensureOutputFolder();
 
             const extractor = new PdfExtractor(
                 format,
@@ -100,7 +109,8 @@ export class PdfImageExtractorCommand implements Command
         const blob = new Blob([pdfWorkerSource], {
             type: "application/javascript",
         });
-        pdfjs.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
+        this.workerUrl = URL.createObjectURL(blob);
+        pdfjs.GlobalWorkerOptions.workerSrc = this.workerUrl;
         this.workerInitialized = true;
     }
 }
@@ -127,8 +137,13 @@ class VaultFileWriter {
         this.fileExt = outputFormat === "jpeg" ? "jpg" : "png";
 
         this.outputFolder = this.resolveOutputFolder(workingFolder);
+    }
+
+    async ensureOutputFolder(): Promise<void> {
         if (this.outputFolder && !this.vault.getAbstractFileByPath(this.outputFolder)) {
-            /* async */ this.vault.createFolder(this.outputFolder);
+            await this.vault.createFolder(this.outputFolder).catch(() => {
+                // Folder may already exist due to a race; ignore.
+            });
         }
     }
 
@@ -185,7 +200,7 @@ class VaultFileWriter {
         }
         if (configured.startsWith("./")) {
             const rel = configured.slice(2);
-            return parent ? `${workingFolder}/${rel}` : rel;
+            return workingFolder ? `${workingFolder}/${rel}` : rel;
         }
         return configured;
     }

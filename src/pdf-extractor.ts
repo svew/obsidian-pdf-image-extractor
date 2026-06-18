@@ -166,7 +166,7 @@ export class PdfExtractor {
         if (!width) return null;
         if (!height) return null;
 
-        const canvas = document.createElement("canvas");
+        const canvas = activeDocument.createElement("canvas");
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext("2d");
@@ -202,7 +202,8 @@ export class PdfExtractor {
 
         for (let i = 0; i < ops.fnArray.length; i++) {
             const fn = ops.fnArray[i];
-            const args = ops.argsArray[i];
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const args: unknown[] = ops.argsArray[i];
 
             const isImageObj = fn === OPS.paintImageXObject
                             || fn === OPS.paintImageXObjectRepeat
@@ -213,7 +214,7 @@ export class PdfExtractor {
                 const key = `${pageNum}:${name}`;
                 if (seen.has(key)) continue;
                 seen.add(key);
-                const img = await this.fetchImageObject(page, name, pageNum,eventCallback);
+                const img = await this.fetchImageObject(page, name, pageNum, eventCallback);
                 if (img) {
                     results.push(img);
                 }
@@ -258,7 +259,7 @@ export class PdfExtractor {
         if (!store) {
             // Neither store reports the object yet. Falling back to a blind
             // callback risks an unsettled promise, so report it as missing.
-            eventCallback({
+            void eventCallback({
                 kind: "error",
                 error: `Image object "${name}" not found in page stores.`,
                 pageNum: pageNum,
@@ -274,19 +275,19 @@ export class PdfExtractor {
                 resolve(img);
             };
             // Safety net: never let a single image stall the whole document.
-            const timer = setTimeout(() => finish(null), 10000);
+            const timer = window.setTimeout(() => finish(null), 10000);
             try {
-                store!.get(name, (img: ExtractedImage) => {
-                    clearTimeout(timer);
+                store.get(name, (img: ExtractedImage) => {
+                    window.clearTimeout(timer);
                     finish(img ?? null);
                 });
             } catch (e) {
-                eventCallback({
+                void eventCallback({
                     kind: "error",
                     error: String(e),
                     pageNum: pageNum,
                 });
-                clearTimeout(timer);
+                window.clearTimeout(timer);
                 finish(null);
             }
         });

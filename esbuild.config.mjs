@@ -1,6 +1,6 @@
 import esbuild from "esbuild";
 import process from "process";
-import builtins from "builtin-modules";
+import module from "module";
 import fs from "fs";
 
 const banner = `/*
@@ -14,6 +14,19 @@ const prod = process.argv[2] === "production";
 // esbuild plugin that loads the PDF.js worker source as a text string so it can
 // be turned into a Blob URL at runtime. This avoids shipping a separate worker
 // file alongside the plugin.
+// esbuild plugin that loads the PDF.js worker source as a text string so it can
+// be turned into a Blob URL at runtime. This avoids shipping a separate worker
+// file alongside the plugin.
+const pdfWorkerAsText = {
+    name: "pdf-worker-as-text",
+    setup(build) {
+        build.onLoad({ filter: /pdf\.worker(\.min)?\.js$/ }, async (args) => {
+            const contents = await fs.promises.readFile(args.path, "utf8");
+            return { contents, loader: "text" };
+        });
+    },
+};
+
 const vaultPluginDir = "PDF Extract Test Vault/.obsidian/plugins/pdf-image-extractor";
 
 // After each build, copy the output into the test vault's plugin folder so Obsidian always
@@ -51,7 +64,7 @@ const context = await esbuild.context({
         "@lezer/common",
         "@lezer/highlight",
         "@lezer/lr",
-        ...builtins,
+        ...module.builtinModules,
     ],
     format: "cjs",
     target: "es2018",
@@ -60,7 +73,7 @@ const context = await esbuild.context({
     treeShaking: true,
     outfile: "main.js",
     minify: prod,
-    plugins: [copyToVault],
+    plugins: [pdfWorkerAsText, copyToVault],
 });
 
 if (prod) {

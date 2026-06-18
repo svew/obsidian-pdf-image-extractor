@@ -6,12 +6,18 @@ import { PdfImageExtractorCommand } from "./src/pdf-extractor-command";
 
 export default class PdfImageExtractorPlugin extends Plugin {
     settings: Partial<PdfImageExtractorSettings> = {};
+    private extractCommand?: PdfImageExtractorCommand;
 
     async onload() {
         await this.loadSettings();
 
-        this.addCommand(new PdfImageExtractorCommand(this));
-        this.addSettingTab(new PdfImageExtractorSettingTab(this.app, this));
+        this.extractCommand = new PdfImageExtractorCommand(this);
+        this.addCommand(this.extractCommand);
+        this.addSettingTab(new PdfImageExtractorSettingTab(this));
+    }
+
+    onunload() {
+        this.extractCommand?.unload();
     }
 
     async loadSettings() {

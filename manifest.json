@@ -2,9 +2,8 @@
     "id": "pdf-image-extractor",
     "name": "PDF Image Extractor",
     "version": "1.0.0",
-    "minAppVersion": "1.4.0",
+    "minAppVersion": "1.13.0",
     "description": "Adds a command to extract embedded images from the currently open PDF and save them to your vault's attachments folder.",
     "author": "svew",
-    "url": "https://github.com/svew/obsidian-pdf-image-extractor",
     "isDesktopOnly": false
 }

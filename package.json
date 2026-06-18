@@ -5,7 +5,8 @@
     "main": "main.js",
     "scripts": {
         "dev": "node esbuild.config.mjs",
-        "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+        "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+        "lint": "eslint ."
     },
     "keywords": [
         "obsidian",
@@ -17,12 +18,18 @@
     "license": "MIT",
     "devDependencies": {
         "@types/node": "^20.11.0",
-        "builtin-modules": "^3.3.0",
+        "@typescript-eslint/eslint-plugin": "^8.61.1",
+        "@typescript-eslint/parser": "^8.61.1",
         "esbuild": "0.20.2",
+        "eslint": "^9.39.4",
+        "eslint-plugin-obsidianmd": "^0.3.0",
         "obsidian": "latest",
         "typescript": "^5.4.0"
     },
     "dependencies": {
         "pdfjs-dist": "3.11.174"
+    },
+    "overrides": {
+        "tar": ">=7.5.16"
     }
 }

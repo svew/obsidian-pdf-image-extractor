@@ -1,148 +1,132 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { PluginSettingTab } from "obsidian";
 import type PdfImageExtractorPlugin from "main";
-import { DEFAULT_SETTINGS, OutputFolderMode, OutputFormat } from "./settings";
+import type { SettingDefinitionItem } from "obsidian";
+import { DEFAULT_SETTINGS } from "./settings";
 
+type SettingsKey = keyof typeof DEFAULT_SETTINGS;
 
 export class PdfImageExtractorSettingTab extends PluginSettingTab {
-    private plugin: PdfImageExtractorPlugin;
+    plugin: PdfImageExtractorPlugin;
 
-    constructor(app: App, plugin: PdfImageExtractorPlugin) {
-        super(app, plugin);
+    constructor(plugin: PdfImageExtractorPlugin) {
+        super(plugin.app, plugin);
         this.plugin = plugin;
     }
 
-    display(): void {
-        const { containerEl } = this;
-        containerEl.empty();
+    getControlValue(key: string): unknown {
+        return this.plugin.getSetting(key as SettingsKey);
+    }
 
-        new Setting(containerEl)
-            .setName("Output folder")
-            .setDesc("Where extracted images are saved. 'Vault attachments folder' uses Obsidian's configured attachments folder.")
-            .addDropdown((drop) => drop
-                .addOption("default", "Vault attachments folder")
-                .addOption("pdf", "Same folder as the PDF")
-                .addOption("subfolder", "Subfolder of the PDF's folder")
-                .addOption("custom", "Custom vault path")
-                .setValue(this.plugin.getSetting("outputFolderMode"))
-                .onChange(async (value) => {
-                    this.plugin.settings.outputFolderMode = value as OutputFolderMode;
-                    await this.plugin.saveSettings();
-                    this.display();
-                })
-            );
+    async setControlValue(key: string, value: unknown): Promise<void> {
+        (this.plugin.settings as Record<string, unknown>)[key] = value;
+        await this.plugin.saveSettings();
+        this.update();
+    }
 
-        if (this.plugin.getSetting("outputFolderMode") === "subfolder") {
-            new Setting(containerEl)
-                .setName("Subfolder template")
-                .setDesc("Relative to the PDF's folder. Supports {pdfname}. Example: {pdfname}-images")
-                .addText((text) => text
-                    .setPlaceholder("{pdfname}")
-                    .setValue(this.plugin.getSetting("subfolderTemplate"))
-                    .onChange(async (value) => {
-                        this.plugin.settings.subfolderTemplate = value;
-                        await this.plugin.saveSettings();
-                    })
-                );
-        }
-
-        if (this.plugin.getSetting("outputFolderMode") === "custom") {
-            new Setting(containerEl)
-                .setName("Custom folder path")
-                .setDesc("Vault-relative path. Will be created if it does not exist.")
-                .addText((text) => text
-                    .setPlaceholder("Extracted Images")
-                    .setValue(this.plugin.getSetting("customFolderPath"))
-                    .onChange(async (value) => {
-                        this.plugin.settings.customFolderPath = value;
-                        await this.plugin.saveSettings();
-                    })
-                );
-        }
-
-        new Setting(containerEl)
-            .setName("Filename template")
-            .setDesc("Supports {pdfname}, {page}, {index}. Extension is added automatically.")
-            .addText((text) => text
-                .setPlaceholder("{pdfname}-p{page}-img{index}")
-                .setValue(this.plugin.getSetting("filenameTemplate"))
-                .onChange(async (value) => {
-                    this.plugin.settings.filenameTemplate = value || DEFAULT_SETTINGS.filenameTemplate;
-                    await this.plugin.saveSettings();
-                })
-            );
-
-        new Setting(containerEl)
-            .setName("Output format")
-            .setDesc("File format for saved images.")
-            .addDropdown((drop) => drop
-                .addOption("png", "PNG (lossless)")
-                .addOption("jpeg", "JPEG (smaller, lossy)")
-                .setValue(this.plugin.getSetting("outputFormat"))
-                .onChange(async (value) => {
-                    this.plugin.settings.outputFormat = value as OutputFormat;
-                    await this.plugin.saveSettings();
-                    this.display();
-                })
-            );
-
-        if (this.plugin.getSetting("outputFormat") === "jpeg") {
-            new Setting(containerEl)
-                .setName("JPEG quality")
-                .setDesc("Quality between 1 and 100.")
-                .addSlider((slider) => slider
-                    .setLimits(1, 100, 1)
-                    .setValue(this.plugin.getSetting("jpegQuality"))
-                    .onChange(async (value) => {
-                        this.plugin.settings.jpegQuality = value;
-                        await this.plugin.saveSettings();
-                    })
-                );
-        }
-
-        new Setting(containerEl)
-            .setName("Minimum width (pixels)")
-            .setDesc("Skip images narrower than this. 0 disables the filter.")
-            .addText((text) => text
-                .setPlaceholder("0")
-                .setValue(String(this.plugin.getSetting("minWidth")))
-                .onChange(async (value) => {
-                    const n = Number.parseInt(value);
-                    if (!Number.isFinite(n) || n < 0) {
-                        text.setValue(String(this.plugin.getSetting("minWidth")));
-                        return;
-                    }
-                    this.plugin.settings.minWidth = n;
-                    await this.plugin.saveSettings();
-                })
-            );
-
-        new Setting(containerEl)
-            .setName("Minimum height (pixels)")
-            .setDesc("Skip images shorter than this. 0 disables the filter.")
-            .addText((text) =>
-                text
-                    .setPlaceholder("0")
-                    .setValue(String(this.plugin.getSetting("minHeight")))
-                    .onChange(async (value) => {
-                        const n = Number.parseInt(value);
-                        if (!Number.isFinite(n) || n < 0) {
-                            text.setValue(String(this.plugin.getSetting("minHeight")));
-                            return;
-                        }
-                        this.plugin.settings.minHeight = n;
-                        await this.plugin.saveSettings();
-                    })
-            );
-
-        new Setting(containerEl)
-            .setName("Overwrite existing files")
-            .setDesc("When off, a numeric suffix is appended to avoid overwriting.")
-            .addToggle((toggle) => toggle
-                .setValue(this.plugin.getSetting("overwriteExisting"))
-                .onChange(async (value) => {
-                    this.plugin.settings.overwriteExisting = value;
-                    await this.plugin.saveSettings();
-                })
-            );
+    getSettingDefinitions(): SettingDefinitionItem<SettingsKey>[] {
+        return [
+            {
+                name: "Output folder",
+                desc: "Where extracted images are saved. 'Vault attachments folder' uses Obsidian's configured attachments folder.",
+                control: {
+                    type: "dropdown",
+                    key: "outputFolderMode",
+                    defaultValue: DEFAULT_SETTINGS.outputFolderMode,
+                    options: {
+                        "default": "Vault attachments folder",
+                        "pdf": "Same folder as the PDF",
+                        "subfolder": "Subfolder of the PDF's folder",
+                        "custom": "Custom vault path",
+                    },
+                },
+            },
+            {
+                name: "Subfolder template",
+                desc: "Relative to the PDF's folder. Supports {pdfname}. Example: {pdfname}-images",
+                visible: () => this.plugin.getSetting("outputFolderMode") === "subfolder",
+                control: {
+                    type: "text",
+                    key: "subfolderTemplate",
+                    defaultValue: DEFAULT_SETTINGS.subfolderTemplate,
+                    placeholder: "{pdfname}",
+                },
+            },
+            {
+                name: "Custom folder path",
+                desc: "Vault-relative path. Will be created if it does not exist.",
+                visible: () => this.plugin.getSetting("outputFolderMode") === "custom",
+                control: {
+                    type: "text",
+                    key: "customFolderPath",
+                    defaultValue: DEFAULT_SETTINGS.customFolderPath,
+                    placeholder: "Extracted Images",
+                },
+            },
+            {
+                name: "Filename template",
+                desc: "Supports {pdfname}, {page}, {index}. Extension is added automatically.",
+                control: {
+                    type: "text",
+                    key: "filenameTemplate",
+                    defaultValue: DEFAULT_SETTINGS.filenameTemplate,
+                    placeholder: "{pdfname}-p{page}-img{index}",
+                },
+            },
+            {
+                name: "Output format",
+                desc: "File format for saved images.",
+                control: {
+                    type: "dropdown",
+                    key: "outputFormat",
+                    defaultValue: DEFAULT_SETTINGS.outputFormat,
+                    options: {
+                        "png": "PNG (lossless)",
+                        "jpeg": "JPEG (smaller, lossy)",
+                    },
+                },
+            },
+            {
+                name: "JPEG quality",
+                desc: "Quality between 1 and 100.",
+                visible: () => this.plugin.getSetting("outputFormat") === "jpeg",
+                control: {
+                    type: "slider",
+                    key: "jpegQuality",
+                    defaultValue: DEFAULT_SETTINGS.jpegQuality,
+                    min: 1,
+                    max: 100,
+                    step: 1,
+                },
+            },
+            {
+                name: "Minimum width (pixels)",
+                desc: "Skip images narrower than this. 0 disables the filter.",
+                control: {
+                    type: "number",
+                    key: "minWidth",
+                    defaultValue: DEFAULT_SETTINGS.minWidth,
+                    placeholder: "0",
+                },
+            },
+            {
+                name: "Minimum height (pixels)",
+                desc: "Skip images shorter than this. 0 disables the filter.",
+                control: {
+                    type: "number",
+                    key: "minHeight",
+                    defaultValue: DEFAULT_SETTINGS.minHeight,
+                    placeholder: "0",
+                },
+            },
+            {
+                name: "Overwrite existing files",
+                desc: "When off, a numeric suffix is appended to avoid overwriting.",
+                control: {
+                    type: "toggle",
+                    key: "overwriteExisting",
+                    defaultValue: DEFAULT_SETTINGS.overwriteExisting,
+                },
+            },
+        ];
     }
 }

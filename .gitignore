@@ -8,9 +8,6 @@ main.js
 # IDE / OS
 .DS_Store
 
-# npm
-package-lock.json
-
 # testing
 PDF Extract Test Vault
 *.pdf

@@ -1,6 +1,6 @@
 # PDF Image Extractor
 
-An Obsidian plugin provides a command to find all the embedded images in the currently opened PDF file, and saves each one to a subfolder in your vault.
+Obsidian plugin which provides a command to find all the embedded images in the currently opened PDF file, and saves each one to a subfolder in your vault.
 
 <img width="838" height="640" alt="Recording 2026-06-17 171259" src="https://github.com/user-attachments/assets/4ff2c956-d643-485f-a21b-15d3bd7b8605" />
 

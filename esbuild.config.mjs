@@ -14,15 +14,38 @@ const prod = process.argv[2] === "production";
 // esbuild plugin that loads the PDF.js worker source as a text string so it can
 // be turned into a Blob URL at runtime. This avoids shipping a separate worker
 // file alongside the plugin.
-// esbuild plugin that loads the PDF.js worker source as a text string so it can
-// be turned into a Blob URL at runtime. This avoids shipping a separate worker
-// file alongside the plugin.
 const pdfWorkerAsText = {
     name: "pdf-worker-as-text",
     setup(build) {
         build.onLoad({ filter: /pdf\.worker(\.min)?\.js$/ }, async (args) => {
-            const contents = await fs.promises.readFile(args.path, "utf8");
+            let contents = await fs.promises.readFile(args.path, "utf8");
+            // Replace dynamic <script> element creation in the worker source
+            // with a no-op. The worker never runs in a DOM context, so this
+            // code path is unreachable, but its presence in the bundled text
+            // triggers the Obsidian plugin review scanner.
+            contents = contents.replace(
+                /document\.createElement\s*\(\s*["']script["']\s*\)/g,
+                '(() => { throw new Error("dynamic script loading is not supported"); })()',
+            );
             return { contents, loader: "text" };
+        });
+    },
+};
+
+// Strips the dynamic `document.createElement("script")` call from the bundled
+// PDF.js library. We supply the worker via a Blob URL, so `loadScript()` is
+// dead code, but its presence in the final bundle triggers the Obsidian plugin
+// review scanner's "dynamic <script> element creation" check.
+const patchPdfjsLoadScript = {
+    name: "patch-pdfjs-load-script",
+    setup(build) {
+        build.onLoad({ filter: /pdfjs-dist[\\/]build[\\/]pdf\.js$/ }, async (args) => {
+            let contents = await fs.promises.readFile(args.path, "utf8");
+            contents = contents.replace(
+                /document\.createElement\s*\(\s*["']script["']\s*\)/g,
+                '(() => { throw new Error("dynamic script loading is not supported"); })()',
+            );
+            return { contents, loader: "js" };
         });
     },
 };
@@ -73,7 +96,7 @@ const context = await esbuild.context({
     treeShaking: true,
     outfile: "main.js",
     minify: prod,
-    plugins: [pdfWorkerAsText, copyToVault],
+    plugins: [pdfWorkerAsText, patchPdfjsLoadScript, copyToVault],
 });
 
 if (prod) {

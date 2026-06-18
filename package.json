@@ -27,7 +27,7 @@
         "typescript": "^5.4.0"
     },
     "dependencies": {
-        "pdfjs-dist": "3.11.174"
+        "pdfjs-dist": "^4.10.38"
     },
     "overrides": {
         "tar": ">=7.5.16"

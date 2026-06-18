@@ -7,6 +7,7 @@ export default [
             "node_modules/",
             "*.config.mjs",
             "PDF Extract Test Vault/",
+            "src/empty-shim.mjs",
         ],
     },
     ...obsidianmd.configs.recommended,

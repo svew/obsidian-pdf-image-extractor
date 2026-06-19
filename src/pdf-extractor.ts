@@ -202,8 +202,7 @@ export class PdfExtractor {
 
         for (let i = 0; i < ops.fnArray.length; i++) {
             const fn = ops.fnArray[i];
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment - PDF.js operator list args are untyped (any[])
-            const args: unknown[] = ops.argsArray[i];
+            const args = ops.argsArray[i] as unknown[];
 
             const isImageObj = fn === OPS.paintImageXObject
                             || fn === OPS.paintImageXObjectRepeat
